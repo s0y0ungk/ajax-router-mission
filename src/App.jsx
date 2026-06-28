@@ -1,122 +1,86 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState, useEffect } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import Layout from "./components/Layout";
+import Home from "./pages/Home";
+import Posts from "./pages/Posts";
+import PostDetail from "./pages/PostDetail";
+import PostNew from "./pages/PostNew";
+import PostEdit from "./pages/PostEdit";
+import NotFound from "./pages/NotFound";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [posts, setPosts] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  const navigate = useNavigate();
+
+  // 4단계: 데이터 로딩
+  useEffect(() => {
+    let isAlive = true;
+
+    fetch("/data/blog.json")
+      .then(res => res.json())
+      .then(result => {
+        if (isAlive) {
+          setPosts(result);
+          setLoaded(true); // 로드 완료 시 true 변경
+        }
+      })
+      .catch(err => console.error(err));
+
+    return () => {
+      isAlive = false;
+    };
+  }, []);
+
+  const handleCreate = (_title, _content) => {
+    const newId = posts.length > 0 ? Math.max(...posts.map(p => p.id)) + 1 : 1;
+
+    const _contents = posts.concat({
+      id: newId,
+      title: _title,
+      content: _content,
+      createdAt: new Date().toISOString().split("T")[0],
+    });
+
+    setPosts(_contents);
+    navigate(`/posts/${newId}`); // 작성 후 상세페이지로 이동
+  };
+
+  const handleUpdate = (_id, _title, _content) => {
+    setPosts(prev =>
+      prev.map(p =>
+        p.id === _id
+          ? {
+              ...p,
+              title: _title,
+              content: _content,
+            }
+          : p,
+      ),
+    );
+    navigate(`/posts/${_id}`); // 수정 후 상세페이지로 이동
+  };
+
+  const handleDelete = _id => {
+    if (window.confirm("정말로 이 글을 삭제하시겠습니까?")) {
+      setPosts(prev => prev.filter(item => item.id !== _id));
+      navigate("/posts"); // 삭제 후 목록으로 이동
+    }
+  };
+  
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <Routes>
+      <Route path="/" element={<Layout loaded={loaded} />}>
+        <Route index element={<Home posts={posts} />} />
+        <Route path="posts" element={<Posts posts={posts} />} />
+        <Route path="posts/new" element={<PostNew onCreate={handleCreate} />} />
+        <Route path="posts/:id" element={<PostDetail posts={posts} onDelete={handleDelete} />} />
+        <Route path="posts/:id/edit" element={<PostEdit posts={posts} onUpdate={handleUpdate} />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
+  );
 }
 
-export default App
+export default App;
