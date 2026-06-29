@@ -1,7 +1,8 @@
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
+
 import Header from "./Header";
 
-function Layout({ loaded }) {
+export default function Layout({ loaded }) {
   return (
     <div>
       <Header />
@@ -9,5 +10,3 @@ function Layout({ loaded }) {
     </div>
   );
 }
-
-export default Layout;

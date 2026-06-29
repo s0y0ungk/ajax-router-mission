@@ -1,42 +1,50 @@
-import { useState } from 'react';
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import styles from "./PostNew.module.css";
 
-function PostNew({ onCreate }) {
+export default function PostNew({ onCreate }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  let navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
-    if (!title.trim() || !content.trim()) {
-      alert("제목과 내용을 모두 입력해 주세요.");
+    const trimmedTitle = title.trim();
+    const trimmedContent = content.trim();
+    if (!trimmedTitle || !trimmedContent) {
+      alert("제목과 내용을 모두를 입력해주세요");
       return;
     }
-    onCreate(title, content);
-  };
+    const newId = onCreate({
+      title: title,
+      content: content,
+    });
 
+    navigate(`/post/${newId}`);
+  };
   return (
-    <div>
-      <h2>새 글 작성</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <input
-            type="text"
-            placeholder="제목을 입력하세요"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-        <div>
-          <textarea
-            placeholder="내용을 입력하세요"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows="10"
-          />
-        </div>
-        <button type="submit">등록</button>
+    <>
+      <h2>글 작성</h2>
+      <form action="" className={styles.form} onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="제목"
+          value={title}
+          onChange={e => {
+            setTitle(e.target.value);
+          }}
+        />
+        <textarea
+          name=""
+          id=""
+          placeholder="내용"
+          value={content}
+          onChange={e => {
+            setContent(e.target.value);
+          }}
+        ></textarea>
+        <button>등록</button>
       </form>
-    </div>
+    </>
   );
 }
-
-export default PostNew;

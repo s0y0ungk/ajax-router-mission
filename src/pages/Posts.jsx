@@ -1,22 +1,24 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
-function Posts({ posts }) {
+export default function Posts({ posts }) {
+  const sorted = [...posts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
   return (
-    <div>
-      <h2>전체 글 목록</h2>
+    <section>
+      <h2>글 목록</h2>
       {posts.length === 0 ? (
-        <p>글이 없습니다.</p>
+        <>
+          <p>글이 없습니다.</p>
+        </>
       ) : (
         <ul>
-          {posts.map((post) => (
-            <li key={post.id}>
-              <Link to={`/posts/${post.id}`}>{post.title}</Link>
+          {sorted.map(p => (
+            <li key={p.id}>
+              <Link to={`/post/${p.id}`}>{p.title}</Link>
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </section>
   );
 }
-
-export default Posts;
